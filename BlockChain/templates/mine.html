@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang = "en" data-bs-theme = "dark">
+
+<head>
+    <meta charset = "UTF-8">
+    <title>Land Record Storage System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        .flex-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+    <link href ="static/style.css" rel="stylesheet">
+    
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{url_for("home")}}">Land Records System</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{{url_for('home')}}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('mine')}}">Mine Block</a>
+            </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('view')}}">Search Record</a>
+              </li>
+          </ul>
+          <form class="d-flex" role="search" action="/viewuser" method="GET">
+            <input class="form-control me-2" type="search" name="name" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+        </div>
+      </div>
+    </nav>
+    </head>
+    <div class="layout">
+        <form class="row g-3" action = "{{url_for('mine_block')}}" method ="post">
+          <h1>Mine Block</h1>
+          <div class="col-md-6">
+            <label for="inputEmail4" class="form-label">Reward Address</label>
+            <input type="text" class="form-control" id="inputEmail4" name= "address">
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary">Mine Block</button>
+          </div>
+          <p>{{message}}</p>
+        </form>
+      </div>
+    </div>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    </body>
+
+</html>

@@ -1,69 +1,56 @@
-
-
 class ADFGVX:
     def __init__(self,key,transpose_key):
         self.polybius_row =["C","R","Y","P","T","O"]
         self.polybius_col =["G","R","A","P","H","Y"]
         self.transpose_key = transpose_key
         self.key = key
+        self.keyword_length = len(self.transpose_key)
         self.polybius = self.fill_polybius()
     def fill_polybius(self):
-        #Fill the polybius square
-        polybius = []
-        #Fill the matrix with the key left to right and top to bottom
-        temp =[]
-        for i in range(len(self.key)):
-            if(i%6 == 0 and i != 0):
-                polybius.append(temp)
-                temp =[]
-            temp.append(self.key[i])
-        polybius.append(temp)
-        #if matrix is not filled to 6*6 fill the rest with the alphabet
+        dict_alpha = {}
+        polybius = {}
+        for i in range(26):
+            dict_alpha[chr(65+i)] = False
+        for i in range(10):
+            dict_alpha[str(i)] = False
+        row_num =0
+        col_num = 0
+        for i in self.key:
+            if(dict_alpha[i] == False):
+                dict_alpha[i] = True
+                polybius[i] = self.polybius_row[row_num]+self.polybius_col[col_num]
+                col_num += 1
+            if(col_num == 6):
+                row_num += 1
+                col_num = 0
+        #fill the rest of the polybius square with the alphabet
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        for i in range(len(alphabet)):
-            if(alphabet[i] not in self.key):
-                temp.append(alphabet[i])
-                if(len(temp) == 6):
-                    polybius.append(temp)
-                    temp = []
         return polybius
+            
     def encode(self,plaintext):
         #Encode the plaintext
         plaintext = plaintext.upper()
         ciphertext = ""
         for letter in plaintext:
             #find in polybius
-            for i in range(len(self.polybius)):
-                for j in range(len(self.polybius[i])):
-                    if self.polybius[i][j] == letter:
-                        ciphertext += self.polybius_row[i] + self.polybius_col[j]
+            ciphertext += self.polybius[letter]
         ciphertext = self.transpose(ciphertext)
         return ciphertext
     def transpose(self,ciphertext):
-        dict_transpose = {}
-        for i in range(len(self.transpose_key)):
-            dict_transpose[self.transpose_key[i]] = i
-        #Fill cipher text in a matrix with column size of the transpose key
-        matrix = []
-        temp = []
-        for i in range(len(ciphertext)):
-            if(i%len(self.transpose_key) == 0 and i != 0):
-                matrix.append(temp)
-                temp = []
-            temp.append(ciphertext[i])
-        #Fill the last row with "X" if the matrix is not filled
-        if(len(temp) != len(self.transpose_key)):
-            for i in range(len(temp),len(self.transpose_key)):
-                temp.append("X")
-        matrix.append(temp)
-        ciphertext_new = ""
-        #Sort the transpose key
-        sorted_transpose = sorted(self.transpose_key)
-        for i in sorted_transpose:
-            columnadd = dict_transpose[i]
-            for j in range(len(matrix)):
-                    ciphertext_new += matrix[j][columnadd]
-        return ciphertext_new
+        letters = list(ciphertext)        
+        columns = [(letter, ciphertext[i::len(self.transpose_key)]) for i, letter in enumerate(self.transpose_key)]
+        #Sort the columns
+        columns.sort(key=lambda col: col[0])
+        max_length = len(max(columns, key=lambda x: len(x[1]))[1])
+        for i in range(len(columns)):
+            columns[i] = (columns[i][0], columns[i][1] + 'X' * (max_length - len(columns[i][1])))
+        ciphertext = ""
+        for column in columns:
+            for i in range(len(column[1])):
+                ciphertext += column[1][i]
+        return ciphertext
+
+            
         
 
 def main():

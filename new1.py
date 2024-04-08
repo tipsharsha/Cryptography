@@ -34,6 +34,7 @@ def columnar_transposition(keyword, substituted_text):
 def adfgvx_cipher(keyword, permutation, plaintext):
     polybius_square = construct_polybius_square(permutation)
     substituted_text = substitute_with_polybius(plaintext, polybius_square)
+    print(substituted_text)
     ciphertext = columnar_transposition(keyword, substituted_text)
     return ciphertext
 

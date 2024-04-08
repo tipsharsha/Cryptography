@@ -1,7 +1,4 @@
 
-from tabnanny import check
-from unicodedata import digit
-
 
 class Railfence:
     def __init__(self,key):

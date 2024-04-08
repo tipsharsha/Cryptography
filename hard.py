@@ -41,11 +41,11 @@ class Playfair:
         self.fill_matrix()
         #Fill the matrix with the key
         plaintext = ""
-        # for i in range(0,len(ciph),2):
-        #     if ciph[i] == ciph[i+1]:
-        #         ciph = ciph[:i+1] + 'X' + ciph[i+1:]
-        # if len(ciph)%2 != 0:
-        #     ciph += 'X'
+        for i in range(0,len(ciph),2):
+            if ciph[i] == ciph[i+1]:
+                ciph = ciph[:i+1] + 'X' + ciph[i+1:]
+        if len(ciph)%2 != 0:
+            ciph += 'X'
         for i in range(0,len(ciph),2):
             pos1 = self.find_position(ciph[i])
             pos2 = self.find_position(ciph[i+1])
@@ -80,7 +80,7 @@ class Columnar:
     def reverse_transpose(self,ciphertext):
         #Sort the transpose key
         original = self.transpose_key
-        self.transpose_key = sorted(self.transpose_key)
+        self.transpose_key = sorted(self.transp)
         dict_transpose = {}
         for i in range(len(self.transpose_key)):
             dict_transpose[self.transpose_key[i]] = i
@@ -102,15 +102,14 @@ class Columnar:
                 pos = dict_transpose[j]
                 ciphertext_new += matrix[pos][i]
         #remove X from the end
-        while ciphertext_new[-1] == 'X':
-            ciphertext_new = ciphertext_new[:-1]
+        ciphertext_new = ciphertext_new.replace('X','')
         return ciphertext_new
 
 def main():
-    key_playfair = input()
-    key_vigenere = input()
-    key_columnar = input()
-    ciphertext = input()
+    key_playfair = input().strip().upper()
+    key_vigenere = input().strip().upper()
+    key_columnar = input().strip().upper()
+    ciphertext = input().strip().upper()
     vig = Vigenere(key_vigenere)
     col = Columnar(key_columnar)
    
