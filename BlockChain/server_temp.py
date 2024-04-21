@@ -5,7 +5,9 @@ import hmac
 import random
 from generate_prime import generate_large_prime
 from flask import render_template,Flask,request
+from threading import Thread
 
+HMAC_KEY = b"secret"
 
 app = Flask(__name__)
 
@@ -54,6 +56,8 @@ class Transaction:
         self.land_size = land_size
         self.land_location = land_location
         self.time = time.time()
+        transaction_json = json.dumps(self.todict(), sort_keys=True)
+        self.hmac = hmac.new(HMAC_KEY, transaction_json.encode(), hashlib.sha256).hexdigest()
 
     def to_string(self):
         return f"{self.buyer} paid {self.amount} to {self.seller} for a land of size {self.land_size} at {self.land_location}"
@@ -68,58 +72,34 @@ class Transaction:
             "amount": self.amount,
             "land_size": self.land_size,
             "land_location": self.land_location,
-            "time": self.time
+            "time": self.time,
+            "hmac": self.hmac
+        }
+    def todict(self):
+        return {
+            "buyer": self.buyer,
+            "seller": self.seller,
+            "amount": self.amount,
+            "land_size": self.land_size,
+            "land_location": self.land_location,
+            "time": self.time,
         }
         
     def verifytransaction(self):
-            """
-            This method is used to verify the vote cast by the user using Zero Knowledge Proof.
-            It uses Diffie Hellman Key Exchange method . 
-            """
-            #agreed generator
-            g = 3 
-            #agreed prime number (ideally should be larger but  couldn't be due to computer constraint)
-            p = generate_large_prime(32) 
-            #random integer as private key from the reciver side
-            a = random.randint(1,p-1)
-            # public key generated using the private key
-            A = pow(g,a,p)
-            
-            #instance of the new Verifier Class
-            verifier = Verifier(g,p)
-            verifier.createPublicKey()
-            B = verifier.B
-            K = verifier.createSharedKey(A)
-            
-            K_prime = pow(B,a,p)
-            
-            return K==K_prime
-    
+          verifier = Verifier(self)
+          return verifier.verify()
+       
+
 class Verifier:
-    def __init__(self,g,p):
-        """
-        Verifier class constructor is initialized using the 2 parameter:
-        -g (agreed upon generator value)
-        -p (agreed upon n-bits prime number)
-        """
-        self.g = g
-        self.p = p
-        # random private key generated
-        self.b = random.randint(1,p-1) 
-        self.B = None   
-
-    def createPublicKey(self):
-        """
-        Creates public key for the verifier class
-        """
-        self.B = pow(self.g,self.b,self.p)
-
-    def createSharedKey(self,A):
-        """
-        Creates the Key required for verification
-        """
-        K = pow(A,self.b,self.p)
-        return K
+    def __init__(self,transaction) -> None:
+        self.transaction = transaction
+    def verify(self):
+        expected_hmac = self.transaction.hmac
+        transaction_json = json.dumps(self.transaction.todict(), sort_keys=True)
+        computed_hmac = hmac.new(HMAC_KEY, transaction_json.encode(), hashlib.sha256).hexdigest()
+        self.transaction.hmac = expected_hmac
+        return expected_hmac == computed_hmac
+        
 
 class BlockChain:
     def __init__(self) -> None:
@@ -150,7 +130,6 @@ class BlockChain:
         return self.create_block(last_block.proof)
     def add_transaction(self,transaction):
         if transaction.verifytransaction() == True:
-            # print("Transaction Verified")
             self.unconfirmed_transactions.append(transaction)
         else:
             print("Transaction verification failed")
@@ -185,27 +164,6 @@ class BlockChain:
         transaction = Transaction(buyer,seller,amount,land_size,land_location)
         self.add_transaction(transaction)
 
-
-# def main():
-#     blockchain = BlockChain()
-#     buyers = ["Alice","Bob","Charlie","David"]
-#     sellers = ["Eve","Frank","Grace","Hannah"]
-#     secret_key = "secret"
-#     for i in range(4):
-#         blockchain.users.append(buyers[i])
-#         blockchain.users.append(sellers[i])
-#     for i in range(4):
-#         print(blockchain.make_transaction(buyers[i],sellers[i],100,100,"Lagos"))
-#     # print(blockchain.unconfirmed_transactions)
-#     print(blockchain.user_transactions("Alice"))
-#     blockchain.mine_pending_transactions("network")
-#     blockchain.print_blocks()
-#     blockchain.view_users()
-#     blockchain.print_blocks()
-    
-#     blockchain.user_transactions("Bob")
-#     blockchain.user_transactions("Charlie")
-#     blockchain.user_transactions("David")
 
 def mine_indef(blockchain):
     while True:
@@ -266,11 +224,8 @@ def view_user():
         return render_template("view.html", message="Please enter a name to search")
 
 
-def make_string(transaction_dicts,name):
-    string = ""
-    for transaction in transaction_dicts:
-        string += f"{transaction['buyer']} paid {transaction['amount']} to {transaction['seller']} for a land of size {transaction['land_size']} at {transaction['land_location']}\n"
-    return string
 if(__name__ == "__main__"):
+    thread = Thread(target=mine_indef,args=(blocky,),daemon=True)
+    thread.start()
     app.run(debug=True)
     
